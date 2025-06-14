@@ -1,0 +1,24 @@
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: admin  
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: jobtracker
+    ports:
+      - "5432:5432"
+
+  airflow:
+    image: apache/airflow:2.9.1-python3.10
+    depends_on:
+      - postgres
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      AIRFLOW__WEBSERVER__RBAC: 'True'
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./scripts:/opt/airflow/scripts
+    ports:
+      - "8080:8080"
+    command: bash -c "airflow db upgrade && airflow webserver & airflow scheduler"
